@@ -7,31 +7,26 @@ import copy
 import json
 import os
 import re
+import sys
 
 import mock
 import janrain.capture
 
 def load_file(filename, subdir='data'):
-    """read in a file relative to the current file's dir"""
+    """read in a utf-8 file relative to the current file's dir"""
     d = os.path.dirname(os.path.realpath(__file__))
     f = os.path.join(d, subdir, filename)
     with open(f) as fp:
         contents = fp.read()
+    if sys.version_info < (3,):
+        # python2 reads file as byte string
+        return contents.decode('utf-8')
     return contents
 
-def load_text_file(filename, subdir='data'):
-    """read in a utf-8 encoded text file relative to the current file's dir"""
-    return load_file(filename, subdir=subdir).decode('utf-8')
-
 def load_json_file(filename, subdir='data'):
-    """read in a utf-8 json file relative to the current file's dir"""
-    contents = load_text_file(filename, subdir=subdir)
+    """read in a json file relative to the current file's dir"""
+    contents = load_file(filename, subdir=subdir)
     return json.loads(contents)
-
-def format_json(data):
-    """format data into a utf-8 encoded json string"""
-    out = json.dumps(data, ensure_ascii=False, indent=4, separators=(',', ': '), sort_keys=True)
-    return out.encode('utf-8')
 
 class Mockapi(janrain.capture.Api):
     """Mock of janrain.capture.Api"""
@@ -44,7 +39,7 @@ class Mockapi(janrain.capture.Api):
 
         self.settings = load_json_file('mocksettings.json')
 
-        self.schema_name = "janraintestschema"
+        self.schema_name = "testschema"
         self.schema_attributes = load_json_file('mockschema.json')
         self.schema_properties = load_json_file('mockschemaproperties.json')
         self.schemas_list = [

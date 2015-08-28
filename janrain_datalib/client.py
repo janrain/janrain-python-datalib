@@ -112,7 +112,7 @@ class Client(object):
             NotFoundError: if client not found
         """
         try:
-            return dict(self.app.clients_as_dict()[self.client_id].viewitems())
+            return dict(self.app.clients_as_dict()[self.client_id])
         except KeyError:
             raise NotFoundError("client does not exist: {}".format(self.client_id))
 

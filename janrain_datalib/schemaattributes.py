@@ -17,7 +17,7 @@ class SchemaAttributes(list):
             NotFoundError: if attribute is not found
         """
         # convert path to a list if not already
-        if isinstance(path, basestring):
+        if not isinstance(path, list):
             # split into a list
             path = path.strip('/').strip('.')
             path = path.replace('/', '.')

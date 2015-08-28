@@ -4,7 +4,7 @@
             "test_both": "client0",
             "test_client": "client0"
         },
-        "abcdefghijklmnopqrstuvwxyz234567": {
+        "bcdefghijklmnopqrstuvwxyza234567": {
             "test_both": "client1",
             "test_client": "client1"
         }

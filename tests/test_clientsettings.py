@@ -24,7 +24,7 @@ class TestClientSettings(unittest.TestCase):
 
     def test_get_existant(self):
         # get existing setting
-        key = self.client_settings.keys()[0]
+        key = list(self.client_settings.keys())[0]
         value = self.settings.get(key)
         expected = self.client_settings[key]
         self.assertEqual(value, expected)
@@ -38,7 +38,7 @@ class TestClientSettings(unittest.TestCase):
         expected = self.mockapi.settings
         self.assertEqual(self.app.get_cache('settings'), expected)
 
-        key = self.client_settings.keys()[1]
+        key = list(self.client_settings.keys())[1]
         value = self.settings.get(key)
         expected = self.client_settings[key]
         self.assertEqual(value, expected)
@@ -78,7 +78,7 @@ class TestClientSettings(unittest.TestCase):
 
     def test_set(self):
         # existing key
-        key = self.client_settings.keys()[0]
+        key = list(self.client_settings.keys())[0]
         value = 'new value'
         result = self.settings.set(key, value)
         self.assertIs(result, True)
@@ -120,12 +120,12 @@ class TestClientSettings(unittest.TestCase):
 
     def test_set_multi(self):
         items = {
-            self.client_settings.keys()[0]: 'updated',
+            list(self.client_settings.keys())[0]: 'updated',
             'bogus': 'new setting',
         }
         report = self.settings.set_multi(items)
         expected = {
-            self.client_settings.keys()[0]: True,
+            list(self.client_settings.keys())[0]: True,
             'bogus': False,
         }
         self.assertEqual(report, expected)
@@ -144,7 +144,7 @@ class TestClientSettings(unittest.TestCase):
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
     def test_delete(self):
-        key = self.client_settings.keys()[0]
+        key = list(self.client_settings.keys())[0]
         result = self.settings.delete(key)
         self.assertIs(result, True)
 

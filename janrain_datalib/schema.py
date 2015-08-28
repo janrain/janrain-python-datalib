@@ -69,7 +69,8 @@ class Schema(object):
         if rules:
             # rules are not automatically deleted (unlike records)
             # so they must be deleted manually
-            map(self.remove_rule, [r['uuid'] for r in rules])
+            for rule in rules:
+                self.remove_rule(rule['uuid'])
 
         # delete attributes and data
         kwargs = {

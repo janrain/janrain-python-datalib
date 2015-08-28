@@ -4,6 +4,7 @@ build/
 dist/
 *.egg-info/
 *.egg/
+*.eggs/
 _build/
 _static/
 _templates/

@@ -2,11 +2,11 @@
 import os
 import setuptools
 
-PACKAGE = "janrain_datalib"
-
 # get package version
+PACKAGE = "janrain_datalib"
 HERE = os.path.abspath(os.path.dirname(__file__))
-execfile(os.path.join(HERE, PACKAGE, "_version.py"))
+VERSIONFILE = os.path.join(HERE, PACKAGE, "_version.py")
+exec(compile(open(VERSIONFILE).read(), VERSIONFILE, 'exec'))
 # __version__ is now defined
 
 setuptools.setup(

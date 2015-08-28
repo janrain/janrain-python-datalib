@@ -69,20 +69,21 @@ class App(object):
             return self.api.call(cmd, **kwargs)
 
         except janrain.capture.ApiResponseError as err:
+            err_msg = str(err)
             self.logger.error("api error: %s", cmd)
             if (err.code == 402
                     or err.code == 403
                     or err.code == 431
-                    or "malformed" in err.message
-                    or "not a valid id" in err.message):
-                raise ApiAuthError(err.message, err.code)
-            if err.code == 404 or err.code == 222 or "not found" in err.message:
-                raise ApiNotFoundError(err.message, err.code)
-            if err.code == 226 and "changes have been made" in err.message:
-                raise ApiUpdateError(err.message, err.code)
-            if "for_client_id" in err.message or "flow_body" in err.message:
-                raise ApiInputError(err.message, err.code)
-            raise ApiError(err.message, err.code)
+                    or "malformed" in err_msg
+                    or "not a valid id" in err_msg):
+                raise ApiAuthError(err_msg, err.code)
+            if err.code == 404 or err.code == 222 or "not found" in err_msg:
+                raise ApiNotFoundError(err_msg, err.code)
+            if err.code == 226 and "changes have been made" in err_msg:
+                raise ApiUpdateError(err_msg, err.code)
+            if "for_client_id" in err_msg or "flow_body" in err_msg:
+                raise ApiInputError(err_msg, err.code)
+            raise ApiError(err_msg, err.code)
 
         except requests.exceptions.HTTPError as err:
             self.logger.error("http error: %s", cmd)

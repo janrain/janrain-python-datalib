@@ -20,7 +20,7 @@ class TestDefaultSettings(unittest.TestCase):
 
     def test_get_existant(self):
         # get existing setting
-        key = self.mockapi.settings['default_settings'].keys()[0]
+        key = list(self.mockapi.settings['default_settings'].keys())[0]
         value = self.settings.get(key)
         expected = self.mockapi.settings['default_settings'][key]
         self.assertEqual(value, expected)
@@ -51,7 +51,7 @@ class TestDefaultSettings(unittest.TestCase):
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
     def test_set_existant(self):
-        key = self.mockapi.settings['default_settings'].keys()[0]
+        key = list(self.mockapi.settings['default_settings'].keys())[0]
         value = 'new value'
         result = self.settings.set(key, value)
         self.assertIs(result, True)
@@ -63,12 +63,12 @@ class TestDefaultSettings(unittest.TestCase):
 
     def test_set_multi(self):
         items = {
-            self.mockapi.settings['default_settings'].keys()[0]: 'updated',
+            list(self.mockapi.settings['default_settings'].keys())[0]: 'updated',
             'not_set': 'new setting',
         }
         report = self.settings.set_multi(items)
         expected = {
-            self.mockapi.settings['default_settings'].keys()[0]: True,
+            list(self.mockapi.settings['default_settings'].keys())[0]: True,
             'not_set': False,
         }
         self.assertEqual(report, expected)
@@ -79,7 +79,7 @@ class TestDefaultSettings(unittest.TestCase):
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
     def test_delete(self):
-        key = self.mockapi.settings['default_settings'].keys()[0]
+        key = list(self.mockapi.settings['default_settings'].keys())[0]
         result = self.settings.delete(key)
         self.assertIs(result, True)
 
