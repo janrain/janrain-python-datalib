@@ -1,0 +1,30 @@
+[
+    {
+        "attributes": [
+            "/birthday"
+        ],
+        "definition": "ignore-update",
+        "description": "birthday is read-only",
+        "property": "rule",
+        "uuid": "00000000-0000-0000-0000-000000000001"
+    },
+    {
+        "attributes": [
+            "/aboutMe"
+        ],
+        "definition": {
+            "truncate": 100
+        },
+        "property": "rule",
+        "uuid": "00000000-0000-0000-0000-000000000002"
+    },
+    {
+        "attributes": [
+            "/givenName",
+            "/familyName"
+        ],
+        "description": "full name must be unique",
+        "property": "unique",
+        "uuid": "00000000-0000-0000-0000-000000000003"
+    }
+]

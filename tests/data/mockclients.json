@@ -1,0 +1,24 @@
+[
+    {
+        "client_id": "abcdefghijklmnopqrstuvwxyz123456",
+        "client_secret": "123456abcdefghijklmnopqrstuvwxyz",
+        "description": "application owner",
+        "features": [
+            "owner"
+        ],
+        "whitelist": [
+            "0.0.0.0/0"
+        ]
+    },
+    {
+        "client_id": "bcdefghijklmnopqrstuvwxyza234567",
+        "client_secret": "234567bcdefghijklmnopqrstuvwxyza",
+        "description": "login client",
+        "features": [
+            "login_client"
+        ],
+        "whitelist": [
+            "0.0.0.0/0"
+        ]
+    }
+]

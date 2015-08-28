@@ -1,0 +1,47 @@
+[
+    {
+        "case-sensitive": false,
+        "constraints": [
+            "alphabetic"
+        ],
+        "description": "About Me",
+        "features": [
+            "query"
+        ],
+        "length": 1000,
+        "name": "aboutMe",
+        "type": "string"
+    },
+    {
+        "attr_defs": [
+            {
+                "case-sensitive": false,
+                "length": null,
+                "name": "street",
+                "type": "string"
+            },
+            {
+                "case-sensitive": false,
+                "length": null,
+                "name": "city",
+                "type": "string"
+            }
+        ],
+        "name": "address",
+        "type": "object"
+    },
+    {
+        "features": [
+            "query"
+        ],
+        "name": "birthday",
+        "type": "date"
+    },
+    {
+        "constraints": [
+            "unique"
+        ],
+        "name": "email",
+        "type": "string"
+    }
+]
