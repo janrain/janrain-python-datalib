@@ -10,7 +10,7 @@ exec(compile(open(VERSIONFILE).read(), VERSIONFILE, 'exec'))
 # __version__ is now defined
 
 setuptools.setup(
-    name="janrain-python-datalib",
+    name="janrain-datalib",
     description="Janrain Capture Data Library",
     version=__version__,
     url="https://github.com/janrain/janrain-python-datalib",
