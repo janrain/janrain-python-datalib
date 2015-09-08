@@ -27,7 +27,7 @@ class TestSchemaRecord(unittest.TestCase):
         self.assertEqual(record, self.mockapi.entities[0])
 
         calls = [
-            mock.call('entity', type_name=self.schema_name, key_attribute='uuid', key_value=self.uuid)
+            mock.call('entity', type_name=self.schema_name, key_attribute='uuid', key_value='"{}"'.format(self.uuid))
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
@@ -47,7 +47,7 @@ class TestSchemaRecord(unittest.TestCase):
         self.record.delete()
 
         calls = [
-            mock.call('entity.delete', type_name=self.schema_name, key_attribute='uuid', key_value=self.uuid)
+            mock.call('entity.delete', type_name=self.schema_name, key_attribute='uuid', key_value='"{}"'.format(self.uuid))
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
@@ -58,7 +58,7 @@ class TestSchemaRecord(unittest.TestCase):
         self.record.replace(attr)
 
         calls = [
-            mock.call('entity.replace', type_name=self.schema_name, key_attribute='uuid', key_value=self.uuid, attributes=attr)
+            mock.call('entity.replace', type_name=self.schema_name, key_attribute='uuid', key_value='"{}"'.format(self.uuid), attributes=attr)
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
@@ -69,7 +69,7 @@ class TestSchemaRecord(unittest.TestCase):
         self.record.update(attr)
 
         calls = [
-            mock.call('entity.update', type_name=self.schema_name, key_attribute='uuid', key_value=self.uuid, attributes=attr)
+            mock.call('entity.update', type_name=self.schema_name, key_attribute='uuid', key_value='"{}"'.format(self.uuid), attributes=attr)
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
