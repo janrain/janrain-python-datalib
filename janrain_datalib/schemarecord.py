@@ -51,7 +51,8 @@ class SchemaRecord(object):
         kwargs = {
             'type_name': self.schema_name,
             'key_attribute': self.id_attribute,
-            'key_value': self.id_value,
+            # must be a "JSON" string
+            'key_value': '"{}"'.format(self.id_value),
         }
         if attributes is not None:
             kwargs['attributes'] = attributes
@@ -71,7 +72,8 @@ class SchemaRecord(object):
         kwargs = {
             'type_name': self.schema_name,
             'key_attribute': self.id_attribute,
-            'key_value': self.id_value,
+            # must be a "JSON" string
+            'key_value': '"{}"'.format(self.id_value),
             'password_attribute': password_attribute,
             'password_value': password,
             'attributes': [self.id_attribute],
@@ -98,6 +100,8 @@ class SchemaRecord(object):
             'attributes': attributes,
         }
         r = self.app.apicall('entity.create', **kwargs)
+        self._id_attribute = 'uuid'
+        self._id_value = r['uuid']
 
         return {
             'id': r['id'],
@@ -109,7 +113,8 @@ class SchemaRecord(object):
         kwargs = {
             'type_name': self.schema_name,
             'key_attribute': self.id_attribute,
-            'key_value': self.id_value,
+            # must be a "JSON" string
+            'key_value': '"{}"'.format(self.id_value),
         }
         self.app.apicall('entity.delete', **kwargs)
 
@@ -125,7 +130,8 @@ class SchemaRecord(object):
         kwargs = {
             'type_name': self.schema_name,
             'key_attribute': self.id_attribute,
-            'key_value': self.id_value,
+            # must be a "JSON" string
+            'key_value': '"{}"'.format(self.id_value),
             'attributes': attributes,
         }
         if attribute_path is not None:
@@ -142,7 +148,8 @@ class SchemaRecord(object):
         kwargs = {
             'type_name': self.schema_name,
             'key_attribute': self.id_attribute,
-            'key_value': self.id_value,
+            # must be a "JSON" string
+            'key_value': '"{}"'.format(self.id_value),
             'attributes': attributes,
         }
         if attribute_path is not None:
