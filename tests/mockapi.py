@@ -298,7 +298,7 @@ class Mockapi(janrain.capture.Api):
                 count = 0
                 for entity in self.entities:
                     if entity['id'] > min_id:
-                        results.append(entity)
+                        results.append(entity.copy())
                         count += 1
                         if count >= kwargs['max_results']:
                             break

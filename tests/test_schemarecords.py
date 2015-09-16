@@ -1,7 +1,10 @@
 """Tests for Schema."""
+from __future__ import unicode_literals
 import math
 import mock
 import unittest
+import io
+import sys
 
 from janrain_datalib.app import App
 from janrain_datalib.schemarecords import SchemaRecords
@@ -69,26 +72,41 @@ class TestSchemaRecords(unittest.TestCase):
 
     def test_iterator(self):
         total = 0
-        batches = 0
+        batches = 1
+        batch_size = 5
+        entity_id = 0
         calls = []
-        for batch in self.records.iterator(batch_size=5):
-            kwargs = {
-                'type_name': self.schema_name,
-                'filter': 'id > {}'.format(total),
-                'sort_on': ['id'],
-                'max_results': 5,
-            }
-            calls.append(mock.call('entity.find', **kwargs))
-            self.assertEqual(batch[0]['id'], total+1)
-            total += len(batch)
-            batches += 1
+        kwargs = {
+            'type_name': self.schema_name,
+            'filter': 'id > {}'.format(entity_id),
+            'sort_on': ['id'],
+            'max_results': 5,
+        }
+        calls.append(mock.call('entity.find', **kwargs))
+        for i, entity in enumerate(self.records.iterator(batch_size=batch_size), start=1):
+            entity_id = entity['id']
+            self.assertEqual(entity_id, i)
+            if i % batch_size == 0:
+                kwargs['filter'] = 'id > {}'.format(entity_id)
+                calls.append(mock.call('entity.find', **kwargs))
+                batches += 1
+            total += 1
         kwargs['filter'] = 'id > 43'
         calls.append(mock.call('entity.find', **kwargs))
 
         self.assertEqual(total, len(self.mockapi.entities))
-        self.assertEqual(batches, math.ceil(total / 5.0))
+        self.assertEqual(batches, math.ceil(total / float(batch_size)))
 
         self.assertEqual(calls, self.mockapi.call.mock_calls)
+
+    def test_csv_iterator(self):
+        csv_file = io.StringIO(newline=None)
+        attributes = ['uuid', 'email', 'address.city', 'aboutMe', 'lastUpdated', 'adlists']
+        for record in self.records.csv_iterator(attributes):
+            csv_file.write(record)
+        from .mockapi import load_file
+        expected = load_file('test_csv_iterator.csv')
+        self.assertEqual(csv_file.getvalue(), expected)
 
     def test_get_record(self):
         record = self.records.get_record('')
