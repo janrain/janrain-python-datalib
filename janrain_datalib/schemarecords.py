@@ -1,8 +1,4 @@
 """SchemaRecords class."""
-import csv
-import json
-import io
-import os
 import re
 
 from janrain_datalib.utils import to_csv
