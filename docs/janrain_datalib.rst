@@ -16,6 +16,7 @@ Submodules
    janrain_datalib.schemarecord
    janrain_datalib.schemarecords
    janrain_datalib.schemarules
+   janrain_datalib.utils
 
 Module contents
 ---------------
