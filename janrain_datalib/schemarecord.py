@@ -1,5 +1,6 @@
 """SchemaRecord class."""
 from janrain_datalib.exceptions import ApiError
+from janrain_datalib.utils import to_capture_record
 
 class SchemaRecord(object):
     """Encapsulates a schema record."""
@@ -86,15 +87,20 @@ class SchemaRecord(object):
             raise
         return True
 
-    def create(self, attributes):
+    def create(self, attributes, key_map=None, transform_map=None):
         """Create a new entity.
 
         Args:
             attributes: dict of attributes and their values.
+            key_map: dict that maps keys in attributes to attribute dot-paths
+            transform_map: dict that maps keys in attributes to transform functions
 
         Returns:
             dict containing id and uuid of new entity
         """
+        if key_map:
+            attributes = to_capture_record(attributes, key_map, transform_map)
+
         kwargs = {
             'type_name': self.schema_name,
             'attributes': attributes,
@@ -118,7 +124,7 @@ class SchemaRecord(object):
         }
         self.app.apicall('entity.delete', **kwargs)
 
-    def replace(self, attributes, attribute_path=None):
+    def replace(self, attributes, attribute_path=None, key_map=None, transform_map=None):
         """Replace entity.
         Warning: attributes not specified will be set to null,
             plurals not specified will be deleted.
@@ -126,7 +132,12 @@ class SchemaRecord(object):
         Args:
             attributes: dict of attributes and their values.
             attribute_path: path to a subset of entity attributes to replace
+            key_map: dict that maps keys in attributes to attribute dot-paths
+            transform_map: dict that maps keys in attributes to transform functions
         """
+        if key_map:
+            attributes = to_capture_record(attributes, key_map, transform_map)
+
         kwargs = {
             'type_name': self.schema_name,
             'key_attribute': self.id_attribute,
@@ -138,13 +149,18 @@ class SchemaRecord(object):
             kwargs['attribute_name'] = attribute_path
         self.app.apicall('entity.replace', **kwargs)
 
-    def update(self, attributes, attribute_path=None):
+    def update(self, attributes, attribute_path=None, key_map=None, transform_map=None):
         """Update entity.
 
         Args:
             attributes: dict of attributes and their values.
             attribute_path: path to a subset of entity attributes to update
+            key_map: dict that maps keys in attributes to attribute dot-paths
+            transform_map: dict that maps keys in attributes to transform functions
         """
+        if key_map:
+            attributes = to_capture_record(attributes, key_map, transform_map)
+
         kwargs = {
             'type_name': self.schema_name,
             'key_attribute': self.id_attribute,
