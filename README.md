@@ -57,6 +57,10 @@ Create a new schema:
 
 Retrieve all records in a schema:
 
-    for batch in schema.records.iterator(batch_size=1000):
-        for record in batch:
-            uuid = record['uuid']
+    for record in schema.records.iterator(batch_size=1000):
+        uuid = record['uuid']
+
+Update a specific record:
+
+    record = schema.records.get_record(uuid)
+    record.update({'email':'test@test.test'})
