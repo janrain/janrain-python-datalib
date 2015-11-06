@@ -43,6 +43,29 @@ class TestSchemaRecord(unittest.TestCase):
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
+    def test_create_with_maps(self):
+        record = {
+            'balance': '12.00',
+        }
+        key_map = {
+            'balance': 'wallet.balance',
+        }
+        transform_map = {
+            'balance': lambda x: float(x),
+        }
+        result = self.record.create(record, key_map=key_map, transform_map=transform_map)
+        self.assertEqual(result['uuid'], self.mockapi.entities[0]['uuid'])
+
+        expected_attributes = {
+            'wallet': {
+                'balance': 12.00,
+            },
+        }
+        calls = [
+            mock.call('entity.create', type_name=self.schema_name, attributes=expected_attributes)
+        ]
+        self.assertEqual(calls, self.mockapi.call.mock_calls)
+
     def test_delete(self):
         self.record.delete()
 
@@ -62,6 +85,27 @@ class TestSchemaRecord(unittest.TestCase):
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
+    def test_replace_with_maps(self):
+        record = {
+            'balance': '12.00',
+        }
+        key_map = {
+            'balance': 'wallet.balance',
+        }
+        transform_map = {
+            'balance': lambda x: float(x),
+        }
+        self.record.replace(record, key_map=key_map, transform_map=transform_map)
+
+        expected_attributes = {
+            'wallet': {
+                'balance': 12.00,
+            },
+        }
+        calls = [
+            mock.call('entity.replace', type_name=self.schema_name, key_attribute='uuid', key_value='"{}"'.format(self.uuid), attributes=expected_attributes)
+        ]
+
     def test_update(self):
         attr = {
             'email': 'test@test.test'
@@ -72,6 +116,27 @@ class TestSchemaRecord(unittest.TestCase):
             mock.call('entity.update', type_name=self.schema_name, key_attribute='uuid', key_value='"{}"'.format(self.uuid), attributes=attr)
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
+
+    def test_update_with_maps(self):
+        record = {
+            'balance': '12.00',
+        }
+        key_map = {
+            'balance': 'wallet.balance',
+        }
+        transform_map = {
+            'balance': lambda x: float(x),
+        }
+        self.record.update(record, key_map=key_map, transform_map=transform_map)
+
+        expected_attributes = {
+            'wallet': {
+                'balance': 12.00,
+            },
+        }
+        calls = [
+            mock.call('entity.update', type_name=self.schema_name, key_attribute='uuid', key_value='"{}"'.format(self.uuid), attributes=expected_attributes)
+        ]
 
 if __name__ == '__main__':
     unittest.main()

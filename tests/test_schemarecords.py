@@ -4,7 +4,6 @@ import math
 import mock
 import unittest
 import io
-import sys
 
 from janrain_datalib.app import App
 from janrain_datalib.schemarecords import SchemaRecords
@@ -67,6 +66,30 @@ class TestSchemaRecords(unittest.TestCase):
 
         calls = [
             mock.call('entity.count', type_name=self.schema_name)
+        ]
+        self.assertEqual(calls, self.mockapi.call.mock_calls)
+
+    def test_find(self):
+        kwargs = {
+            'attributes': ['givenName', 'primaryAddress.city'],
+            'sort_on': ['givenName'],
+            'batch_size': 3,
+            'start_index': 6,
+            'filtering': "lastUpdated > '2001-01-01'",
+        }
+        records = self.records.find(**kwargs)
+        self.assertEqual(len(records), kwargs['batch_size'])
+
+        call_kwargs = {
+            'type_name': self.schema_name,
+            'attributes': kwargs['attributes'],
+            'sort_on': kwargs['sort_on'],
+            'max_results': kwargs['batch_size'],
+            'first_result': kwargs['start_index'],
+            'filter': kwargs['filtering'],
+        }
+        calls = [
+            mock.call('entity.find', **call_kwargs)
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 

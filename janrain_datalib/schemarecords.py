@@ -28,23 +28,23 @@ class SchemaRecords(object):
         """Schema name."""
         return self._schema_name
 
-    def create(self, entities, mode='smart'):
-        """Create a batch of entities all at once.
+    def create(self, records, mode='smart'):
+        """Create a batch of records all at once.
 
         Args:
-            entities: list of dicts of attribute keys and values
+            records: list of dicts of attribute keys and values
             mode: the mode to use when committing the batch
                 options: ('smart', 'each', 'all')
                     'smart': try to create all in a single batch - if it fails,
                         fallback to 'each' (minimizes failures
-                        while providing a speed boost if most entities are ok)
-                    'each': create each entity separately - if one fails,
+                        while providing a speed boost if most records are ok)
+                    'each': create each record separately - if one fails,
                         continue to the next one (slow)
                     'all': create all in a single batch - if any one fails, all
-                        of the entities in the batch will fail (fast, but some
-                        entities may fail that would not have)
+                        of the records in the batch will fail (fast, but some
+                        records may fail that would not have)
         Returns:
-            list of uuids for new entities or error messages for failures
+            list of uuids for new records or error messages for failures
         """
         if mode == 'each':
             mode = True
@@ -52,14 +52,14 @@ class SchemaRecords(object):
             mode = False
         kwargs = {
             'type_name': self.schema_name,
-            'all_attributes': entities,
+            'all_attributes': records,
             'commit_each': mode,
         }
         r = self.app.apicall('entity.bulkCreate', **kwargs)
         return r['uuid_results']
 
     def delete(self):
-        """Delete all entities in the schema."""
+        """Delete all records in the schema."""
         kwargs = {
             'type_name': self.schema_name,
             'commit': True,
@@ -67,13 +67,13 @@ class SchemaRecords(object):
         self.app.apicall('entity.purge', **kwargs)
 
     def count(self, filtering=None):
-        """Total entities in the schema.
+        """Total records in the schema.
 
         Args:
-            filtering: filter to apply (default: count all entities)
+            filtering: filter to apply (default: count all records)
 
         Returns:
-            count of entities
+            count of records
         """
         kwargs = {
             'type_name': self.schema_name,
@@ -83,19 +83,51 @@ class SchemaRecords(object):
         r = self.app.apicall('entity.count', **kwargs)
         return r['total_count']
 
-    def iterator(self, attributes=None, batch_size=100, filtering=None):
-        """Iterate over entities in the schema.
+    def find(self, attributes=None, sort_on=None, batch_size=None, start_index=None, filtering=None):
+        """Get a batch of records from the schema.
+
+        Args:
+            attributes: list of attributes to return in each record
+                (default: all attributes)
+            sort_on: list of attributes to sort by; to sort in descending order,
+                prefix the attribute with a minus sign (-)
+            batch_size: maximum results to return; cannot be higher than 10000
+            start_index: start batch at a number other than 1;
+                use this if all records cannot be returned in a single batch
+            filtering: filter to apply when fetching records;
+                values must be enclosed in single quotes unless they are
+                attributes or integers (e.g., "lastUpdated > '2000-01-01'")
+
+        Returns:
+            list of records
+        """
+        kwargs = {
+            'type_name': self.schema_name,
+        }
+        if attributes is not None:
+            kwargs['attributes'] = attributes
+        if sort_on is not None:
+            kwargs['sort_on'] = sort_on
+        if filtering is not None:
+            kwargs['filter'] = filtering
+        if batch_size is not None:
+            kwargs['max_results'] = batch_size
+        if start_index is not None:
+            kwargs['first_result'] = start_index
+        return self.app.apicall('entity.find', **kwargs)['results']
+
+    def iterator(self, attributes=None, batch_size=None, filtering=None):
+        """Iterate over records in the schema.
         Does not allow arbitrary sorting; sorts by id in order to use it
         for paging for efficiency reasons.
 
         Args:
-            attributes: list of attributes to include in results
-                (default: all attributes)
-            batch_size: max number of entities in each batch
-            filtering: filter to apply (e.g., 'lastUpdated > 2000-01-01')
+            attributes: list of attributes to include
+            batch_size: maximum results to return per batch
+            filtering: filter to apply
 
         Yields:
-            the next entity
+            the next record
         """
         remove_id = False  # whether to remove id from results
         if attributes is not None and 'id' not in attributes:
@@ -110,20 +142,16 @@ class SchemaRecords(object):
         else:
             filtering = '{} and id > {}'.format(filtering, last_id)
         while True:
-            kwargs = {
-                'type_name': self.schema_name,
-                'filter': filtering,
-                'sort_on': ['id'],
-                'max_results': batch_size,
-            }
-            if attributes:
-                kwargs['attributes'] = attributes
-            r = self.app.apicall('entity.find', **kwargs)
-
-            if r['results']:
-                last_id = r['results'][-1]['id']
+            records = self.find(
+                attributes=attributes,
+                sort_on=['id'],
+                batch_size=batch_size,
+                filtering=filtering,
+            )
+            if records:
+                last_id = records[-1]['id']
                 filtering = re.sub(r'id > (\d+)', 'id > {}'.format(last_id), filtering)
-                for record in r['results']:
+                for record in records:
                     if remove_id:
                         record.pop('id', None)
                     yield record
@@ -131,7 +159,7 @@ class SchemaRecords(object):
                 break
 
     def csv_iterator(self, attributes, batch_size=None, filtering=None, headers=True):
-        """Iterate over entities in the schema and format as CSV.
+        """Iterate over records in the schema and format as CSV.
 
         Newlines within fields will be escaped as '\\n' to ensure that each
         line contains an entire record.
@@ -141,8 +169,8 @@ class SchemaRecords(object):
 
         Args:
             attributes: list of attributes to include
-            batch_size: max number of entities in each batch
-            filtering: filter to apply (e.g., 'lastUpdated > 2000-01-01')
+            batch_size: maximum results to return per batch
+            filtering: filter to apply
             headers:
                 if falsey, don't include headers
                 if True, headers will be the attribute path as specified
@@ -172,8 +200,8 @@ class SchemaRecords(object):
         if filtering is not None:
             kwargs['filtering'] = filtering
 
-        for entity in self.iterator(**kwargs):
-            row = [dot_lookup(entity, attr) for attr in attributes]
+        for record in self.iterator(**kwargs):
+            row = [dot_lookup(record, attr) for attr in attributes]
             yield to_csv(row)
 
     def get_record(self, id_value, id_attribute='uuid'):
