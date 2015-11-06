@@ -12,7 +12,7 @@ class SchemaRecord(object):
             app: App object
             schema_name: name of schema
             id_value: value of id_attribute
-            id_attribute: attribute to use for identifying the entity,
+            id_attribute: attribute to use for identifying the record,
                 (must have 'unique' constraint).
         """
         self._app = app
@@ -41,13 +41,13 @@ class SchemaRecord(object):
         return self._id_attribute
 
     def as_dict(self, attributes=None):
-        """The entity as a dict.
+        """The record as a dict.
 
         Args:
             attributes: list of attributes to include (default: all attributes)
 
         Returns:
-            entity dict
+            record dict
         """
         kwargs = {
             'type_name': self.schema_name,
@@ -61,7 +61,7 @@ class SchemaRecord(object):
         return r['result']
 
     def validate_password(self, password, password_attribute='password'):
-        """Validate the password for an entity.
+        """Validate the password for a record.
 
         Args:
             password: the password
@@ -88,7 +88,7 @@ class SchemaRecord(object):
         return True
 
     def create(self, attributes, key_map=None, transform_map=None):
-        """Create a new entity.
+        """Create a new record.
 
         Args:
             attributes: dict of attributes and their values.
@@ -96,7 +96,7 @@ class SchemaRecord(object):
             transform_map: dict that maps keys in attributes to transform functions
 
         Returns:
-            dict containing id and uuid of new entity
+            dict containing id and uuid of new record
         """
         if key_map:
             attributes = to_capture_record(attributes, key_map, transform_map)
@@ -115,7 +115,7 @@ class SchemaRecord(object):
         }
 
     def delete(self):
-        """Delete entity."""
+        """Delete record."""
         kwargs = {
             'type_name': self.schema_name,
             'key_attribute': self.id_attribute,
@@ -125,13 +125,13 @@ class SchemaRecord(object):
         self.app.apicall('entity.delete', **kwargs)
 
     def replace(self, attributes, attribute_path=None, key_map=None, transform_map=None):
-        """Replace entity.
+        """Replace record.
         Warning: attributes not specified will be set to null,
             plurals not specified will be deleted.
 
         Args:
             attributes: dict of attributes and their values.
-            attribute_path: path to a subset of entity attributes to replace
+            attribute_path: path to a subset of record attributes to replace
             key_map: dict that maps keys in attributes to attribute dot-paths
             transform_map: dict that maps keys in attributes to transform functions
         """
@@ -150,11 +150,11 @@ class SchemaRecord(object):
         self.app.apicall('entity.replace', **kwargs)
 
     def update(self, attributes, attribute_path=None, key_map=None, transform_map=None):
-        """Update entity.
+        """Update record.
 
         Args:
             attributes: dict of attributes and their values.
-            attribute_path: path to a subset of entity attributes to update
+            attribute_path: path to a subset of record attributes to update
             key_map: dict that maps keys in attributes to attribute dot-paths
             transform_map: dict that maps keys in attributes to transform functions
         """
