@@ -104,8 +104,8 @@ def dot_assign(obj, path, value):
             obj[key] = value
     return obj
 
-def to_capture_record(record, key_map, transform_map=None):
-    """Returns a multilevel dict given a flat record and a key_map.
+def to_capture_record(record, key_map=None, transform_map=None):
+    """Returns a multilevel dict given a flat record.
     If key is missing from key_map, use original key.
     If transform function is missing from transform_map, do nothing.
 
@@ -126,6 +126,8 @@ def to_capture_record(record, key_map, transform_map=None):
     Returns:
         multi-level dict
     """
+    if key_map is None:
+        key_map = {}
     if transform_map is None:
         transform_map = {}
     obj = {}
