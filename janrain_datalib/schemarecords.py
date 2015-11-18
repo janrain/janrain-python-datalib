@@ -28,11 +28,11 @@ class SchemaRecords(object):
         """Schema name."""
         return self._schema_name
 
-    def create(self, records, mode='smart'):
-        """Create a batch of records all at once.
+    def create(self, records, mode='smart', batch_size=None):
+        """Create multiple records.
 
         Args:
-            records: list of dicts of attribute keys and values
+            records: list or iterator of dicts of attribute keys and values
             mode: the mode to use when committing the batch
                 options: ('smart', 'each', 'all')
                     'smart': try to create all in a single batch - if it fails,
@@ -43,6 +43,9 @@ class SchemaRecords(object):
                     'all': create all in a single batch - if any one fails, all
                         of the records in the batch will fail (fast, but some
                         records may fail that would not have)
+            batch_size: if specified, api calls will be broken up into batches
+                of this number of records
+
         Returns:
             list of uuids for new records or error messages for failures
         """
@@ -50,13 +53,28 @@ class SchemaRecords(object):
             mode = True
         elif mode == 'all':
             mode = False
+        if not batch_size:
+            records = list(records)
+            batch_size = len(records)
+
         kwargs = {
             'type_name': self.schema_name,
-            'all_attributes': records,
             'commit_each': mode,
         }
-        r = self.app.apicall('entity.bulkCreate', **kwargs)
-        return r['uuid_results']
+        batch = []
+        report = []
+        for record in records:
+            batch.append(record)
+            if len(batch) >= batch_size:
+                kwargs['all_attributes'] = batch
+                r = self.app.apicall('entity.bulkCreate', **kwargs)
+                report.extend(r['uuid_results'])
+                batch = []
+        if batch:
+            kwargs['all_attributes'] = batch
+            r = self.app.apicall('entity.bulkCreate', **kwargs)
+            report.extend(r['uuid_results'])
+        return report
 
     def delete(self):
         """Delete all records in the schema."""
