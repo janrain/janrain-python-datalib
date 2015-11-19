@@ -1,4 +1,5 @@
 """SchemaRecords class."""
+import json
 import re
 
 from janrain_datalib.utils import to_csv
@@ -53,27 +54,32 @@ class SchemaRecords(object):
             mode = True
         elif mode == 'all':
             mode = False
-        if not batch_size:
-            records = list(records)
-            batch_size = len(records)
 
-        kwargs = {
-            'type_name': self.schema_name,
-            'commit_each': mode,
-        }
+        def create_batch(batch):
+            """send batch to api"""
+            kwargs = {
+                'type_name': self.schema_name,
+                'commit_each': mode,
+                'all_attributes': batch,
+            }
+            r = self.app.apicall('entity.bulkCreate', **kwargs)
+            return r['uuid_results']
+
         batch = []
         report = []
         for record in records:
             batch.append(record)
+            if not batch_size:
+                # find reasonable batch size based on size of first record
+                record_len = len(json.dumps(record))
+                # batches will be approx 1MB
+                batch_size = 1 + int(1000000 / record_len)
             if len(batch) >= batch_size:
-                kwargs['all_attributes'] = batch
-                r = self.app.apicall('entity.bulkCreate', **kwargs)
-                report.extend(r['uuid_results'])
+                report.extend(create_batch(batch))
                 batch = []
+        # leftover records
         if batch:
-            kwargs['all_attributes'] = batch
-            r = self.app.apicall('entity.bulkCreate', **kwargs)
-            report.extend(r['uuid_results'])
+            report.extend(create_batch(batch))
         return report
 
     def delete(self):
