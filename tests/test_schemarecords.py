@@ -36,6 +36,20 @@ class TestSchemaRecords(unittest.TestCase):
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
+    def test_create_batches(self):
+        num_records = 100000
+
+        def record_generator():
+            for i in range(num_records):
+                yield {"email": "test{}@test.test".format(i)}
+
+        batch_size = 1000
+        report = self.records.create(record_generator(), batch_size=batch_size)
+        self.assertEqual(len(report), num_records)
+
+        num_calls = int(num_records / batch_size)
+        self.assertEqual(num_calls, len(self.mockapi.call.mock_calls))
+
     def test_create_each(self):
         all_attributes = [{"email": "test0@test.test"}]
         self.records.create(all_attributes, mode='each')
