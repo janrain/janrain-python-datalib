@@ -26,7 +26,7 @@ class TestSchemaRecords(unittest.TestCase):
 
     def test_create(self):
         all_attributes = [{"email": "test{}@test.test".format(i)} for i in range(13)]
-        report = self.records.create(all_attributes)
+        report = list(self.records.create(all_attributes))
         self.assertEqual(len(report), 13)
         self.assertEqual(report[0], '00000000-0000-0000-0000-000000000000')
         self.assertEqual(report[12]['stat'], 'error')
@@ -44,7 +44,7 @@ class TestSchemaRecords(unittest.TestCase):
                 yield {"email": "test{}@test.test".format(i)}
 
         batch_size = 1000
-        report = self.records.create(record_generator(), batch_size=batch_size)
+        report = list(self.records.create(record_generator(), batch_size=batch_size))
         self.assertEqual(len(report), num_records)
 
         num_calls = int(num_records / batch_size)
@@ -52,7 +52,8 @@ class TestSchemaRecords(unittest.TestCase):
 
     def test_create_each(self):
         all_attributes = [{"email": "test0@test.test"}]
-        self.records.create(all_attributes, mode='each')
+        report = list(self.records.create(all_attributes, mode='each'))
+        self.assertEqual(len(report), len(all_attributes))
         calls = [
             mock.call('entity.bulkCreate', type_name=self.schema_name, all_attributes=all_attributes, commit_each=True)
         ]
@@ -60,7 +61,8 @@ class TestSchemaRecords(unittest.TestCase):
 
     def test_create_all(self):
         all_attributes = [{"email": "test0@test.test"}]
-        self.records.create(all_attributes, mode='all')
+        report = list(self.records.create(all_attributes, mode='all'))
+        self.assertEqual(len(report), len(all_attributes))
         calls = [
             mock.call('entity.bulkCreate', type_name=self.schema_name, all_attributes=all_attributes, commit_each=False)
         ]
