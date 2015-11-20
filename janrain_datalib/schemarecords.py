@@ -47,8 +47,8 @@ class SchemaRecords(object):
             batch_size: if specified, api calls will be broken up into batches
                 of this number of records
 
-        Returns:
-            list of uuids for new records or error messages for failures
+        Yields:
+            list of uuids for new records or errors for failures
         """
         if mode == 'each':
             mode = True
@@ -66,7 +66,6 @@ class SchemaRecords(object):
             return r['uuid_results']
 
         batch = []
-        report = []
         for record in records:
             batch.append(record)
             if not batch_size:
@@ -75,12 +74,13 @@ class SchemaRecords(object):
                 # batches will be approx 1MB
                 batch_size = 1 + int(1000000 / record_len)
             if len(batch) >= batch_size:
-                report.extend(create_batch(batch))
+                for item in create_batch(batch):
+                    yield item
                 batch = []
         # leftover records
         if batch:
-            report.extend(create_batch(batch))
-        return report
+            for item in create_batch(batch):
+                yield item
 
     def delete(self):
         """Delete all records in the schema."""
