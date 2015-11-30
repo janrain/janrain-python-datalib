@@ -64,6 +64,7 @@ class App(object):
         Raises:
             ApiError: all kinds
         """
+        exception = None
         try:
             self.logger.debug("apicall: %s", cmd)
             return self.api.call(cmd, **kwargs)
@@ -71,29 +72,36 @@ class App(object):
         except janrain.capture.ApiResponseError as err:
             err_msg = str(err)
             self.logger.error("api error: %s", cmd)
-            if (err.code == 402
-                    or err.code == 403
-                    or err.code == 431
-                    or "malformed" in err_msg
-                    or "not a valid id" in err_msg):
-                raise ApiAuthError(err_msg, err.code)
-            if err.code == 404 or err.code == 222 or "not found" in err_msg:
-                raise ApiNotFoundError(err_msg, err.code)
-            if err.code == 226 and "changes have been made" in err_msg:
-                raise ApiUpdateError(err_msg, err.code)
-            if "for_client_id" in err_msg or "flow_body" in err_msg:
-                raise ApiInputError(err_msg, err.code)
-            raise ApiError(err_msg, err.code)
+            cond = any((
+                err.code == 402,
+                err.code == 403,
+                err.code == 431,
+                "malformed" in err_msg,
+                "not a valid id" in err_msg,
+            ))
+            if cond:
+                exception = ApiAuthError(err_msg, err.code)
+            elif err.code == 404 or err.code == 222 or "not found" in err_msg:
+                exception = ApiNotFoundError(err_msg, err.code)
+            elif err.code == 226 and "changes have been made" in err_msg:
+                exception = ApiUpdateError(err_msg, err.code)
+            elif "for_client_id" in err_msg or "flow_body" in err_msg:
+                exception = ApiInputError(err_msg, err.code)
+            else:
+                exception = ApiError(err_msg, err.code)
 
         except requests.exceptions.HTTPError as err:
             self.logger.error("http error: %s", cmd)
-            if (err.response.status_code == 403
-                    and "too large" in err.response.text
-                    or err.response.status_code == 502
-                    or err.response.status_code == 504):
-                raise ApiTooLargeError("request was too large", err.response.status_code)
-            if err.response.status_code == 510:
-                raise ApiRateLimitError("rate limit exceeded", err.response.status_code)
+            cond = any((
+                err.response.status_code == 403,
+                err.response.status_code == 502,
+                err.response.status_code == 504,
+                "too large" in err.response.text,
+            ))
+            if cond:
+                exception = ApiTooLargeError("request was too large", err.response.status_code)
+            elif err.response.status_code == 510:
+                exception = ApiRateLimitError("rate limit exceeded", err.response.status_code)
             # something else happened
             raise
 
@@ -101,6 +109,9 @@ class App(object):
             # most likely these will be other Requests errors
             self.logger.error("other error: %s", cmd)
             raise
+
+        if exception:
+            raise exception
 
     def get_cache(self, key=None):
         """Retrieve a value from the cache.
