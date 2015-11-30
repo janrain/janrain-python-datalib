@@ -71,8 +71,11 @@ class SchemaRecords(object):
             if not batch_size:
                 # find reasonable batch size based on size of first record
                 record_len = len(json.dumps(record))
-                # batches will be approx 1MB
+                # limit batches to approx 1MB
                 batch_size = 1 + int(1000000 / record_len)
+                if batch_size > 2000:
+                    # or 2000 records, whichever is less
+                    batch_size = 2000
             if len(batch) >= batch_size:
                 for item in create_batch(batch):
                     yield item
