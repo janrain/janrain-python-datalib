@@ -1,5 +1,8 @@
 """SchemaRecords class."""
+import concurrent.futures
+import itertools
 import json
+import queue
 import re
 
 from janrain_datalib.utils import to_csv
@@ -29,7 +32,7 @@ class SchemaRecords(object):
         """Schema name."""
         return self._schema_name
 
-    def create(self, records, mode='smart', batch_size=None):
+    def create(self, records, mode='smart', batch_size=None, concurrency=1):
         """Create multiple records.
 
         Args:
@@ -46,44 +49,117 @@ class SchemaRecords(object):
                         records may fail that would not have)
             batch_size: if specified, api calls will be broken up into batches
                 of this number of records
+            concurrency: number of simultaneous api calls that will be made
 
         Yields:
-            list of uuids for new records or errors for failures
+            uuids for new records or errors for failures
+            they will be returned in the same order the records were in
         """
         if mode == 'each':
             mode = True
         elif mode == 'all':
             mode = False
 
-        def create_batch(batch):
-            """send batch to api"""
+        futures_q = queue.Queue(maxsize=concurrency*2)
+        results_q = queue.Queue()
+
+        def create_batch(batch, start_record_num):
+            """Create a batch of records.
+
+            Returns:
+                iterator of tuples consisting of (record_num, uuid_result)
+            """
             kwargs = {
                 'type_name': self.schema_name,
                 'commit_each': mode,
                 'all_attributes': batch,
             }
             r = self.app.apicall('entity.bulkCreate', **kwargs)
-            return r['uuid_results']
+            return zip(itertools.count(start=start_record_num), r['uuid_results'])
 
-        batch = []
-        for record in records:
-            batch.append(record)
-            if not batch_size:
-                # find reasonable batch size based on size of first record
-                record_len = len(json.dumps(record))
-                # limit batches to approx 1MB
-                batch_size = 1 + int(1000000 / record_len)
-                if batch_size > 2000:
-                    # or 2000 records, whichever is less
-                    batch_size = 2000
-            if len(batch) >= batch_size:
-                for item in create_batch(batch):
-                    yield item
-                batch = []
-        # leftover records
-        if batch:
-            for item in create_batch(batch):
-                yield item
+        def records_creator(batch_size, executor):
+            """Schedules creation of record batches and puts the future
+            results in a queue for later retrieval.
+            """
+            batch = []
+            # keep track of the record_num at the beginning of each batch so
+            # that information is available when the results are retrieved
+            start_record_num = None
+            for record_num, record in enumerate(records, start=1):
+                if not start_record_num:
+                    start_record_num = record_num
+                batch.append(record)
+                if not batch_size:
+                    # find reasonable batch size based on size of first record
+                    record_len = len(json.dumps(record))
+                    # limit batches to approx 1MB
+                    batch_size = 1 + int(1000000 / record_len)
+                    if batch_size > 2000:
+                        # or 2000 records, whichever is less
+                        batch_size = 2000
+                if len(batch) >= batch_size:
+                    future = executor.submit(create_batch, batch, start_record_num)
+                    futures_q.put(future)
+                    # start a new batch
+                    batch = []
+                    start_record_num = None
+            # leftover records
+            if batch:
+                future = executor.submit(create_batch, batch, start_record_num)
+                futures_q.put(future)
+
+        def results_fetcher():
+            """Starts the record creating thread, gets the results from
+            the futures queue, and puts them in the results queue.
+            """
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as record_executor:
+                creator_executor = concurrent.futures.ThreadPoolExecutor(max_workers=concurrency)
+                creator_future = record_executor.submit(records_creator, batch_size, creator_executor)
+
+                while True:
+                    try:
+                        future = futures_q.get(timeout=1)
+                    except queue.Empty:
+                        if creator_future.done():
+                            # might raise an exception
+                            creator_future.result()
+                            # all batches have been submitted
+                            break
+                    else:
+                        try:
+                            result = future.result()
+                        except Exception:
+                            # stop creating records if an error happens
+                            creator_executor.shutdown(wait=False)
+                            raise
+                        else:
+                            results_q.put(result)
+
+                creator_executor.shutdown(wait=False)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            # start the various threads
+            results_future = executor.submit(results_fetcher)
+
+            results_map = {}
+            # start at the first record and yield each one in order
+            for i in itertools.count(start=1):
+                # fetch results until the current record number is available
+                while i not in results_map:
+                    try:
+                        results = results_q.get(timeout=1)
+                    except queue.Empty:
+                        if results_future.done():
+                            # might raise an exception
+                            results_future.result()
+                            # all done
+                            raise StopIteration
+                    else:
+                        # put results into the map
+                        for record_num, uuid in results:
+                            results_map[record_num] = uuid
+
+                yield results_map.pop(i)
 
     def delete(self):
         """Delete all records in the schema."""

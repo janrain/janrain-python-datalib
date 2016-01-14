@@ -44,7 +44,7 @@ class TestSchemaRecords(unittest.TestCase):
                 yield {"email": "test{}@test.test".format(i)}
 
         batch_size = 1000
-        report = list(self.records.create(record_generator(), batch_size=batch_size))
+        report = list(self.records.create(record_generator(), batch_size=batch_size, concurrency=5))
         self.assertEqual(len(report), num_records)
 
         num_calls = int(num_records / batch_size)
