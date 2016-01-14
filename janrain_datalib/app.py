@@ -65,9 +65,23 @@ class App(object):
             ApiError: all kinds
         """
         exception = None
+        retries = 0
+        retries_max = 3
+        timeout = int(kwargs.get('timeout', 10))
         try:
-            self.logger.debug("apicall: %s", cmd)
-            return self.api.call(cmd, **kwargs)
+            while True:
+                try:
+                    self.logger.debug("apicall: %s", cmd)
+                    return self.api.call(cmd, **kwargs)
+                except janrain.capture.ApiResponseError as err:
+                    if retries < retries_max and err.code == 504:
+                        self.logger.debug("apicall timed out after {} seconds, retrying...".format(timeout))
+                        retries += 1
+                        # increase timeout
+                        timeout += 10
+                        kwargs['timeout'] = timeout
+                    else:
+                        raise
 
         except janrain.capture.ApiResponseError as err:
             err_msg = str(err)
