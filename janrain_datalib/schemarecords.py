@@ -131,6 +131,8 @@ class SchemaRecords(object):
                         except Exception:
                             # stop creating records if an error happens
                             creator_executor.shutdown(wait=False)
+                            # unwedge records_creator
+                            futures_q.get(timeout=1)
                             raise
                         else:
                             results_q.put(result)

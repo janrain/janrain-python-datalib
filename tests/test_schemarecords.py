@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import math
 import mock
+import time
 import unittest
 import io
 
@@ -32,30 +33,64 @@ class TestSchemaRecords(unittest.TestCase):
         self.assertEqual(report[12]['stat'], 'error')
 
         calls = [
-            mock.call('entity.bulkCreate', type_name=self.schema_name, all_attributes=all_attributes, commit_each='smart')
+            mock.call(
+                'entity.bulkCreate',
+                type_name=self.schema_name,
+                all_attributes=all_attributes,
+                commit_each='smart')
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
     def test_create_batches(self):
-        num_records = 100000
-
-        def record_generator():
+        def record_generator(num_records):
             for i in range(num_records):
                 yield {"email": "test{}@test.test".format(i)}
 
-        batch_size = 1000
-        report = list(self.records.create(record_generator(), batch_size=batch_size, concurrency=5))
+        num_records = 20
+        batch_size = 3
+        concurrency = 2
+        report = list(self.records.create(
+            record_generator(num_records),
+            batch_size=batch_size,
+            concurrency=concurrency))
         self.assertEqual(len(report), num_records)
 
-        num_calls = int(num_records / batch_size)
+        num_calls = math.ceil(num_records / batch_size)
         self.assertEqual(num_calls, len(self.mockapi.call.mock_calls))
+
+    def test_create_batches_error(self):
+        def record_generator(num_records):
+            for i in range(num_records):
+                yield {"email": "test{}@test.test".format(i)}
+
+        def mock_call(*args, **kwargs):
+            time.sleep(1)
+            raise Exception('error')
+        self.mockapi.call = mock.Mock(side_effect=mock_call)
+
+        num_records = 20
+        batch_size = 3
+        concurrency = 2
+        try:
+            list(self.records.create(
+                record_generator(num_records),
+                batch_size=batch_size,
+                concurrency=concurrency))
+        except Exception:
+            pass  # expection
+        else:
+            self.fail("Error not raised on exception")
 
     def test_create_each(self):
         all_attributes = [{"email": "test0@test.test"}]
         report = list(self.records.create(all_attributes, mode='each'))
         self.assertEqual(len(report), len(all_attributes))
         calls = [
-            mock.call('entity.bulkCreate', type_name=self.schema_name, all_attributes=all_attributes, commit_each=True)
+            mock.call(
+                'entity.bulkCreate',
+                type_name=self.schema_name,
+                all_attributes=all_attributes,
+                commit_each=True)
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
@@ -64,7 +99,11 @@ class TestSchemaRecords(unittest.TestCase):
         report = list(self.records.create(all_attributes, mode='all'))
         self.assertEqual(len(report), len(all_attributes))
         calls = [
-            mock.call('entity.bulkCreate', type_name=self.schema_name, all_attributes=all_attributes, commit_each=False)
+            mock.call(
+                'entity.bulkCreate',
+                type_name=self.schema_name,
+                all_attributes=all_attributes,
+                commit_each=False)
         ]
         self.assertEqual(calls, self.mockapi.call.mock_calls)
 
