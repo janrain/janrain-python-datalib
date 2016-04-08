@@ -15,7 +15,7 @@ from janrain_datalib.defaultsettings import DefaultSettings
 from janrain_datalib.client import Client
 from janrain_datalib.schema import Schema
 
-def get_app(application_url, client_id, client_secret, application_id=None):
+def get_app(application_url, client_id, client_secret, application_id=None, user_agent=None):
     """Get an :class:`.App` object.
 
     Args:
@@ -23,6 +23,7 @@ def get_app(application_url, client_id, client_secret, application_id=None):
         client_id: client_id with admin priveleges
         client_secret: client_secret for client_id
         application_id: application id
+        user_agent: user agent to use for api calls
 
     Returns:
         an App object
@@ -33,7 +34,7 @@ def get_app(application_url, client_id, client_secret, application_id=None):
     }
     if application_id is not None:
         defaults['application_id'] = application_id
-    api = janrain.capture.Api(application_url, defaults)
+    api = janrain.capture.Api(application_url, defaults, user_agent=user_agent)
     return App(api)
 
 class App(object):
