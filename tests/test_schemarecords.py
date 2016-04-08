@@ -29,8 +29,18 @@ class TestSchemaRecords(unittest.TestCase):
         all_attributes = [{"email": "test{}@test.test".format(i)} for i in range(13)]
         report = list(self.records.create(all_attributes))
         self.assertEqual(len(report), 13)
-        self.assertEqual(report[0], '00000000-0000-0000-0000-000000000000')
-        self.assertEqual(report[12]['stat'], 'error')
+        expected_result = {
+            'id': 44,
+            'uuid': '00000000-0000-0000-0000-000000000000'
+        }
+        expected_error = {
+            'code': 361,
+            'error': 'unique_violation',
+            'error_description': 'Attempted to update a duplicate value',
+            'stat': 'error',
+        }
+        self.assertEqual(report[0], expected_result)
+        self.assertEqual(report[12], expected_error)
 
         calls = [
             mock.call(

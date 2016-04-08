@@ -52,7 +52,9 @@ class SchemaRecords(object):
             concurrency: number of simultaneous api calls that will be made
 
         Yields:
-            uuids for new records or errors for failures
+            results for new records as dicts containing either:
+                the id and uuid (on success)
+                or error and error description (on failure)
             they will be returned in the same order the records were in
         """
         if mode == 'each':
@@ -75,7 +77,14 @@ class SchemaRecords(object):
                 'all_attributes': batch,
             }
             r = self.app.apicall('entity.bulkCreate', **kwargs)
-            return zip(itertools.count(start=start_record_num), r['uuid_results'])
+            batch_results = []
+            for i, cid, uuid in zip(itertools.count(start=start_record_num), r['results'], r['uuid_results']):
+                if isinstance(uuid, dict):
+                    result = (i, uuid)
+                else:
+                    result = (i, {'id': cid, 'uuid': uuid})
+                batch_results.append(result)
+            return batch_results
 
         def records_creator(batch_size, executor):
             """Schedules creation of record batches and puts the future
@@ -158,8 +167,8 @@ class SchemaRecords(object):
                             raise StopIteration
                     else:
                         # put results into the map
-                        for record_num, uuid in results:
-                            results_map[record_num] = uuid
+                        for record_num, result in results:
+                            results_map[record_num] = result
 
                 yield results_map.pop(i)
 
