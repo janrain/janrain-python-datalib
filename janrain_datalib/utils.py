@@ -32,7 +32,7 @@ def to_csv(row, delim=None):
     """Convert a list of items to a CSV string.
 
     Example:
-    #>>> to_csv(['first', '2nd,with,commas', 'lasty'])
+    >>> to_csv(['first', '2nd,with,commas', 'lasty'])
     'first,"2nd,with,commas",lasty\\r\\n'
 
     Args:
