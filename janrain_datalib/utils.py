@@ -32,12 +32,12 @@ def to_csv(row, delim=None):
     """Convert a list of items to a CSV string.
 
     Example:
-    >>> to_csv(['first', '2nd,with,commas', 'lasty'])
+    #>>> to_csv(['first', '2nd,with,commas', 'lasty'])
     'first,"2nd,with,commas",lasty\\r\\n'
 
     Args:
         row: list of items to be formatted as CSV
-        delim: the delimiter to use in the CSV
+        delim: the delimiter to use for the CSV output
 
     Returns:
         CSV record string
@@ -55,7 +55,14 @@ def to_csv(row, delim=None):
             item = to_json(item, compact=True)
         new_row.append(item)
     output = io.StringIO()
-    writer = csv.writer(output, delimiter=delim)
+
+    # if the delimiter is set use it
+    if(delim):
+        writer = csv.writer(output, delimiter=delim)
+    # otherwise use the default comma delimiter
+    else:
+        writer = csv.writer(output)
+
     writer.writerow(new_row)
     return output.getvalue()
 
