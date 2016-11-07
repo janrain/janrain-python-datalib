@@ -18,8 +18,7 @@ setuptools.setup(
         PACKAGE,
     ],
     install_requires=[
-        "janrain-python-api",
-        "requests",
+         "janrain-python-api == 0.4.0",
     ],
     tests_require=[
         "Mock",

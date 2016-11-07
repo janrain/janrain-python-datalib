@@ -57,7 +57,7 @@ def to_csv(row, delim=None):
     output = io.StringIO()
 
     # if the delimiter is set use it
-    if delim :
+    if delim:
         writer = csv.writer(output, delimiter=delim)
     # otherwise use the default comma delimiter
     else:
