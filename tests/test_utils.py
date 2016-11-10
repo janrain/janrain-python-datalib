@@ -18,7 +18,7 @@ class TestUtils(unittest.TestCase):
         expected = 'first,"2nd,with,commas",lasty\r\n'
         delimiter = None
         # call
-        result = to_csv(input, delim=delimiter)
+        result = to_csv(input, delimiter=delimiter)
         # test
         self.assertEqual(result, expected)
 
@@ -28,7 +28,7 @@ class TestUtils(unittest.TestCase):
         expected = 'first|2nd,with,commas|lasty\r\n'
         delimiter = '|'
         # call
-        result = to_csv(input, delim=delimiter)
+        result = to_csv(input, delimiter=delimiter)
         # test
         self.assertEqual(result, expected)
 
@@ -38,6 +38,6 @@ class TestUtils(unittest.TestCase):
         expected = 'first;2nd,with,commas;lasty\r\n'
         delimiter = ';'
         # call
-        result = to_csv(input, delim=delimiter)
+        result = to_csv(input, delimiter=delimiter)
         # test
         self.assertEqual(result, expected)
