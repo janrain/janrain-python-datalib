@@ -28,7 +28,7 @@ def to_json(item, compact=False):
         kwargs['separators'] = (',', ': ')
     return json.dumps(item, **kwargs)
 
-def to_csv(row):
+def to_csv(row, delimiter=None):
     """Convert a list of items to a CSV string.
 
     Example:
@@ -37,6 +37,7 @@ def to_csv(row):
 
     Args:
         row: list of items to be formatted as CSV
+        delim: the delimiter to use for the CSV output
 
     Returns:
         CSV record string
@@ -54,7 +55,14 @@ def to_csv(row):
             item = to_json(item, compact=True)
         new_row.append(item)
     output = io.StringIO()
-    writer = csv.writer(output)
+
+    # if the delimiter is set use it
+    if delimiter:
+        writer = csv.writer(output, delimiter=delimiter)
+    # otherwise use the default comma delimiter
+    else:
+        writer = csv.writer(output)
+
     writer.writerow(new_row)
     return output.getvalue()
 
