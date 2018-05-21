@@ -9,4 +9,4 @@ deploy:
   provider: script
   script: bin/deploy
   on:
-    branch: topic/DEVOPS-2398/deploy-to-pypi-in-s3
+    branch: master
